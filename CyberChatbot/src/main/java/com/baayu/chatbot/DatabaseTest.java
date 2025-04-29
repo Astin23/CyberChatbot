@@ -10,8 +10,9 @@ public class DatabaseTest {
             DatabaseManager db = new DatabaseManager();
             db.connect();
 
-            // Test User
-            User user = new User(0, "testuser", "password123");
+            // Test User with unique username
+            String username = "testuser_" + UUID.randomUUID().toString().substring(0, 8);
+            User user = new User(0, username, "password123");
             db.createUser(user);
             User fetchedUser = db.getUserById(1);
             System.out.println("User: " + fetchedUser.getUsername());
