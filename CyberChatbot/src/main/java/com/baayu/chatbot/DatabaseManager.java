@@ -189,4 +189,7 @@ public class DatabaseManager {
             connection.close();
         }
     }
+    public Connection getConnection() {
+        return connection;
+    }
 }

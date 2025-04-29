@@ -1,7 +1,5 @@
 package com.baayu.chatbot;
 
-import java.sql.SQLException;
-
 public class ChatbotTest {
     public static void main(String[] args) {
         try {
@@ -14,11 +12,17 @@ public class ChatbotTest {
                 System.out.println("Logged in with session token: " + session.getSessionToken());
             }
 
-            chatbot.sendMessage(user.getUserId(), "Hello from chatbot!", false);
-            System.out.println("Message sent.");
+            chatbot.sendMessage(user.getUserId(), "Hello from chatbot!", true);
+            System.out.println("Encrypted message sent.");
+
+            // Fetch and decrypt message using Chatbot's public method
+            for (Message msg : chatbot.getMessagesByUser(user.getUserId())) {
+                String content = chatbot.getMessageContent(msg);
+                System.out.println("Message: " + content);
+            }
 
             chatbot.close();
-        } catch (SQLException e) {
+        } catch (Exception e) { // Simplified catch block
             System.err.println("Error: " + e.getMessage());
         }
     }
