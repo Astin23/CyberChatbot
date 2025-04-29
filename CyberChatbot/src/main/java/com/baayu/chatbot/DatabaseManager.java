@@ -5,13 +5,15 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 public class DatabaseManager {
     private Connection connection;
 
     public void connect() throws SQLException {
         try {
-            Class.forName("org.sqlite.JDBC"); // Explicitly register driver
+            Class.forName("org.sqlite.JDBC");
         } catch (ClassNotFoundException e) {
             throw new SQLException("SQLite JDBC Driver not found.", e);
         }
@@ -24,12 +26,21 @@ public class DatabaseManager {
         stmt.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'");
         ResultSet rs = stmt.getResultSet();
         if (!rs.next()) {
-            String sql = """
+            System.out.println("Initializing database tables...");
+
+            // Create users table
+            String createUsersTable = """
                 CREATE TABLE users (
                     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT NOT NULL UNIQUE,
                     password_hash TEXT NOT NULL
                 );
+                """;
+            stmt.execute(createUsersTable);
+            System.out.println("Users table created.");
+
+            // Create messages table
+            String createMessagesTable = """
                 CREATE TABLE messages (
                     message_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
@@ -38,6 +49,12 @@ public class DatabaseManager {
                     is_encrypted BOOLEAN DEFAULT FALSE,
                     FOREIGN KEY (user_id) REFERENCES users(user_id)
                 );
+                """;
+            stmt.execute(createMessagesTable);
+            System.out.println("Messages table created.");
+
+            // Create sessions table
+            String createSessionsTable = """
                 CREATE TABLE sessions (
                     session_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
@@ -47,9 +64,32 @@ public class DatabaseManager {
                     FOREIGN KEY (user_id) REFERENCES users(user_id)
                 );
                 """;
-            stmt.execute(sql);
+            stmt.execute(createSessionsTable);
+            System.out.println("Sessions table created.");
+
+            System.out.println("Database tables created.");
+        } else {
+            System.out.println("Database already initialized.");
         }
         stmt.close();
+    }
+
+    // Optional: Load tables from init.sql
+    private void initializeDatabaseFromFile() throws SQLException {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(getClass().getResourceAsStream("/init.sql")))) {
+            StringBuilder sql = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sql.append(line).append("\n");
+            }
+            try (Statement stmt = connection.createStatement()) {
+                stmt.execute(sql.toString());
+                System.out.println("Database initialized from init.sql.");
+            }
+        } catch (Exception e) {
+            throw new SQLException("Failed to initialize database from init.sql", e);
+        }
     }
 
     public void createUser(User user) throws SQLException {
@@ -150,4 +190,3 @@ public class DatabaseManager {
         }
     }
 }
-
