@@ -1,8 +1,8 @@
 package com.baayu.chatbot;
 
 import java.sql.SQLException;
-import java.sql.PreparedStatement; // Added import
-import java.sql.ResultSet; // Added import
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -21,9 +21,23 @@ public class Chatbot {
     }
 
     public User register(String username, String password) throws SQLException {
+        // Check if username already exists
+        if (usernameExists(username)) {
+            throw new SQLException("Username '" + username + "' already exists. Please choose a different username.");
+        }
+
         User user = new User(0, username, password);
         db.createUser(user);
         return user;
+    }
+
+    private boolean usernameExists(String username) throws SQLException {
+        String sql = "SELECT 1 FROM users WHERE username = ?";
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next();
+        }
     }
 
     public Session login(String username, String password) throws SQLException {
@@ -65,5 +79,13 @@ public class Chatbot {
 
     public void close() throws SQLException {
         db.close();
+    }
+
+    public void logout(String sessionToken) throws SQLException {
+        String sql = "DELETE FROM sessions WHERE session_token = ?";
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(sql)) {
+            pstmt.setString(1, sessionToken);
+            pstmt.executeUpdate();
+        }
     }
 }
