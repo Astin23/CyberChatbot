@@ -88,4 +88,11 @@ public class Chatbot {
             pstmt.executeUpdate();
         }
     }
+    public void deleteUser(String username) throws SQLException {
+        String sql = "DELETE FROM users WHERE username = ?";
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            pstmt.executeUpdate();
+        }
+    }
 }
